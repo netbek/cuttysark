@@ -282,10 +282,12 @@
       if (!_.isEqual(current, nextValues)) {
         var oldValues = current;
         current = nextValues;
-        console.log('change', nextValues, oldValues);
+        this.emit('update', nextValues, oldValues);
       }
     }
   };
+
+  asEvented.call(CuttySark.prototype);
 
   return CuttySark;
 });

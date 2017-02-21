@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="no-js">
   <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width"/>
@@ -7,9 +7,15 @@
     <title>cuttysark</title>
     <link rel="stylesheet" href="../node_modules/normalize-css/normalize.css"/>
     <link rel="stylesheet" href="../css/styles.css"/>
+    <script>
+      // Picture element HTML5 shiv
+      document.createElement('picture');
+    </script>
     <script src="../node_modules/modernizr/modernizr.custom.js"></script>
-    <script src="../node_modules/lodash-3/lodash.js"></script>
-    <script src="../node_modules/jquery/dist/jquery.js"></script>
+    <script src="../node_modules/asevented/asevented.min.js"></script>
+    <script src="../node_modules/lodash-3/lodash.min.js"></script>
+    <script src="../node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="../node_modules/picturefill/dist/picturefill.min.js" async></script>
     <script src="../js/cuttysark.js"></script>
   </head>
   <body>
@@ -18,6 +24,24 @@
         Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
       </p>
 
+      <div class="frame">
+        <svg xmlns="http://www.w3.org/2000/svg" width="572" height="462" viewBox="0 0 572 462">
+          <defs>
+            <clipPath id="circleClip">
+              <circle fill="none" stroke="#999" stroke-miterlimit="10" cx="286" cy="172" r="146"/>
+            </clipPath>
+          </defs>
+          <image clip-path="url(#circleClip)" xlink:href="../img/300.jpg" x="140" y="26" width="292" height="292"></image>
+          <path fill="none" stroke="#999" stroke-miterlimit="10" d="M1 21C1 9.954 9.954 1 21 1h530c11.045 0 20 8.954 20 20v350c0 11.046-8.955 20-20 20H21c-11.046 0-20-8.954-20-20V21z"/>
+          <path fill="none" stroke="#999" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="3" d="M223.444 391c0 3.386.101 8.549.299 15.492 0 6.113-.482 11.313-1.447 15.597-2.664 11.813-10.054 21.709-22.172 29.688-7.158 4.731-10.104 7.615-8.838 8.651.366.312 1.214.502 2.547.57h184.336c1.332-.068 2.181-.26 2.547-.57 1.266-1.036-1.681-3.92-8.839-8.651-12.118-7.979-19.508-17.876-22.171-29.688-.966-4.284-1.448-9.482-1.448-15.597.2-6.943.3-12.105.3-15.492"/>
+        </svg>
+        <img sizes="100vw" srcset="../img/300.jpg 300w, ../img/600.jpg 600w, ../img/1200.jpg 1200w" alt="" />
+        <noscript>
+          <img src="../img/300.jpg" alt="" />
+        </noscript>
+      </div>
+
+      {#
       <div class="frame">
         <svg xmlns="http://www.w3.org/2000/svg" width="572" height="462" viewBox="0 0 572 462">
           <defs>
@@ -46,6 +70,7 @@
           <path fill="none" stroke="#999999" stroke-miterlimit="10" d="M28 58h230M28 403h230"/>
         </svg>
       </div>
+      #}
 
       <p>
         Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
@@ -53,7 +78,54 @@
 
       <script>
         (function(){
-          (new NB.CuttySark({debug: true})).init();
+          if (Modernizr.svgclippaths) {
+            var url = '../img/300.jpg';
+
+            (new NB.CuttySark({
+              debug: true,
+              mediaqueries: {
+                small: 'only screen and (min-width: 464px)',
+                medium: 'only screen and (min-width: 752px)',
+                large: 'only screen and (min-width: 1008px)',
+                xlarge: 'only screen and (min-width: 1344px)',
+                xxlarge: 'only screen and (min-width: 1920px)',
+                retina: 'only screen and (-webkit-min-device-pixel-ratio: 2), ' +
+                  'only screen and (min--moz-device-pixel-ratio: 2), ' +
+                  'only screen and (-o-min-device-pixel-ratio: 2/1), ' +
+                  'only screen and (min-device-pixel-ratio: 2), ' +
+                  'only screen and (min-resolution: 192dpi), ' +
+                  'only screen and (min-resolution: 2dppx)'
+              }
+            }))
+              .init()
+              .on('update', function(nextValues, oldValues) {
+                var nextURL = '../img/300.jpg';
+
+                if (_.includes(nextValues, 'retina')) {
+                  nextURL = '../img/600.jpg';
+
+                  if (_.includes(nextValues, 'large')) {
+                    nextURL = '../img/2400.jpg';
+                  }
+                  else if (_.includes(nextValues, 'small')) {
+                    nextURL = '../img/1200.jpg';
+                  }
+                }
+                else {
+                  if (_.includes(nextValues, 'large')) {
+                    nextURL = '../img/1200.jpg';
+                  }
+                  else if (_.includes(nextValues, 'small')) {
+                    nextURL = '../img/600.jpg';
+                  }
+                }
+
+                if (nextURL !== url) {
+                  url = nextURL;
+                  jQuery('.frame svg image').attr('xlink:href', nextURL);
+                }
+              });
+            }
         })();
       </script>
     </div>
