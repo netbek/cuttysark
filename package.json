@@ -1,6 +1,6 @@
 {
   "name": "cutty",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "repository": {
     "type": "git",
@@ -22,7 +22,7 @@
     "url": "https://github.com/netbek/cutty/issues"
   },
   "dependencies": {
-    "asevented": "^0.4.6",
+    "asevented": "^0.4.5",
     "html5shiv": "^3.7.3",
     "jquery": "^1.11.1",
     "lodash-3": "https://github.com/lodash/lodash/archive/3.10.1.tar.gz",

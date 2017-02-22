@@ -1,6 +1,6 @@
 {
   "name": "cutty",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "ignore": [
     "**/.*",
     "bower_components",
@@ -9,7 +9,7 @@
     "test"
   ],
   "dependencies": {
-    "asevented": "^0.4.6",
+    "asEvented": "git://github.com/mkuklis/asEvented.git#^0.4.5",
     "picturefill": "^3.0.2"
   }
 }
