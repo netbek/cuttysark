@@ -1,0 +1,39 @@
+.nb-cutty {
+  display: block;
+  position: relative;
+
+  &__svg {
+    display: none;
+    width: 100%;
+    height: auto;
+  }
+
+  &__img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+  }
+}
+
+.no-js {
+  .nb-cutty {
+    &__img {
+      display: none;
+    }
+  }
+}
+
+.js {
+  &.svgclippaths {
+    .nb-cutty {
+      &__svg {
+        display: block;
+      }
+
+      &__img {
+        display: none;
+      }
+    }
+  }
+}

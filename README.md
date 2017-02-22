@@ -1,9 +1,22 @@
-# cuttysark
+# cutty
 
-* https://developer.mozilla.org/en/docs/Web/SVG/Element/clipPath
-* https://www.smashingmagazine.com/2015/05/creating-responsive-shapes-with-clip-path/
-* https://sarasoueidan.com/blog/css-svg-clipping/
-* http://codepen.io/maddesigns/pen/kbqzu
+## Install
+
+```
+bower install cutty
+```
+
+Also requires the following lodash methods:
+
+clone
+first
+forEach
+intersection
+isEqual
+last
+map
+sortBy
+trim
 
 ## Credit
 

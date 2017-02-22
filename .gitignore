@@ -12,8 +12,6 @@ nbproject
 /temp/
 
 # Dist files
-/css/
 /img/
-/js/
 /svg/
-/www/
+/demo/

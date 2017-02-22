@@ -176,7 +176,7 @@ gulp.task('clean', function () {
     'css',
     'js',
     'svg',
-    'www'
+    'demo'
   ]);
 });
 
@@ -200,7 +200,7 @@ gulp.task('build-svg', function (cb) {
     .on('end', cb);
 });
 
-gulp.task('build-www', function (cb) {
+gulp.task('build-demo', function (cb) {
   var context = {};
 
   return fs.readFileAsync('src/index.njk', 'utf-8')
@@ -208,7 +208,7 @@ gulp.task('build-www', function (cb) {
       return nunjucks.renderString(data, context);
     })
     .then(function (data) {
-      return fs.outputFileAsync('www/index.html', data, 'utf-8');
+      return fs.outputFileAsync('demo/index.html', data, 'utf-8');
     });
 });
 
@@ -219,7 +219,7 @@ gulp.task('build', function (cb) {
     'build-img',
     'build-js',
     'build-svg',
-    'build-www',
+    'build-demo',
     cb
   );
 });
