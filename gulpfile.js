@@ -5,6 +5,7 @@ var del = require('del');
 var fs = require('fs-extra');
 var gulp = require('gulp');
 var livereload = require('livereload');
+var modernizr = require('gulp-modernizr');
 var nunjucks = require('nunjucks');
 var open = require('open');
 var os = require('os');
@@ -14,6 +15,7 @@ var rename = require('gulp-rename');
 var runSequence = require('run-sequence');
 var sass = require('gulp-sass');
 var svgmin = require('gulp-svgmin');
+var through2 = require('through2');
 var uglify = require('gulp-uglify');
 var webserver = require('gulp-webserver');
 
@@ -25,7 +27,13 @@ Promise.promisifyAll(fs);
 
 var config = require('./gulp-config.js');
 
-var livereloadOpen = (config.webserver.https ? 'https' : 'http') + '://' + config.webserver.host + ':' + config.webserver.port + (config.webserver.open ? config.webserver.open : '/');
+var livereloadOpen =
+  (config.webserver.https ? 'https' : 'http') +
+  '://' +
+  config.webserver.host +
+  ':' +
+  config.webserver.port +
+  (config.webserver.open ? config.webserver.open : '/');
 
 /*******************************************************************************
  * Misc
@@ -48,6 +56,30 @@ if (_.has(config.webserver.browsers, platform)) {
  ******************************************************************************/
 
 /**
+ * Returns custom Modernizr build.
+ *
+ * @return {Promise}
+ */
+function buildModernizr() {
+  var data;
+
+  return new Promise(function(resolve, reject) {
+    gulp
+      .src([config.src.vendor + 'modernizr/modernizr.css'])
+      .pipe(modernizr(config.modernizr))
+      .pipe(
+        through2.obj(function(chunk, enc, callback) {
+          data = chunk.contents.toString(enc);
+          this.emit('end');
+        })
+      )
+      .on('end', function() {
+        resolve(data);
+      });
+  });
+}
+
+/**
  *
  * @param  {String} src
  * @param  {String} dist
@@ -59,12 +91,16 @@ function buildCss(src, dist) {
     .pipe(sass(config.css.params).on('error', sass.logError))
     .pipe(autoprefixer(config.autoprefixer))
     .pipe(gulp.dest(dist))
-    .pipe(cssmin({
-      advanced: false
-    }))
-    .pipe(rename({
-      suffix: '.min'
-    }))
+    .pipe(
+      cssmin({
+        advanced: false
+      })
+    )
+    .pipe(
+      rename({
+        suffix: '.min'
+      })
+    )
     .pipe(gulp.dest(dist));
 }
 
@@ -75,9 +111,7 @@ function buildCss(src, dist) {
  * @return {Stream}
  */
 function buildImg(src, dist) {
-  return gulp
-    .src(src)
-    .pipe(gulp.dest(dist));
+  return gulp.src(src).pipe(gulp.dest(dist));
 }
 
 /**
@@ -90,9 +124,11 @@ function buildJs(src, dist) {
   return gulp
     .src(src)
     .pipe(gulp.dest(dist))
-    .pipe(rename({
-      suffix: '.min'
-    }))
+    .pipe(
+      rename({
+        suffix: '.min'
+      })
+    )
     .pipe(uglify())
     .pipe(gulp.dest(dist));
 }
@@ -106,16 +142,18 @@ function buildJs(src, dist) {
 function buildSvg(src, dist) {
   return gulp
     .src(src)
-    .pipe(svgmin({
-      js2svg: {
-        pretty: true
-      },
-      // plugins: [{
-      //   cleanupIDs: {
-      //     remove: false
-      //   }
-      // }]
-    }))
+    .pipe(
+      svgmin({
+        js2svg: {
+          pretty: true
+        }
+        // plugins: [{
+        //   cleanupIDs: {
+        //     remove: false
+        //   }
+        // }]
+      })
+    )
     .pipe(gulp.dest(dist));
 }
 
@@ -131,7 +169,7 @@ function startWatch(files, tasks, livereload) {
     tasks.push('livereload-reload');
   }
 
-  gulp.watch(files, function () {
+  gulp.watch(files, function() {
     runSequence.apply(null, tasks);
   });
 }
@@ -141,17 +179,18 @@ function startWatch(files, tasks, livereload) {
  ******************************************************************************/
 
 // Start webserver.
-gulp.task('webserver-init', function (cb) {
+gulp.task('webserver-init', function(cb) {
   var conf = _.clone(config.webserver);
   conf.open = false;
 
-  gulp.src('./')
+  gulp
+    .src('./')
     .pipe(webserver(conf))
     .on('end', cb);
 });
 
 // Start livereload server
-gulp.task('livereload-init', function (cb) {
+gulp.task('livereload-init', function(cb) {
   if (!flags.livereloadInit) {
     flags.livereloadInit = true;
     server = livereload.createServer();
@@ -162,7 +201,7 @@ gulp.task('livereload-init', function (cb) {
 });
 
 // Refresh page
-gulp.task('livereload-reload', function (cb) {
+gulp.task('livereload-reload', function(cb) {
   server.refresh(livereloadOpen);
   cb();
 });
@@ -171,50 +210,67 @@ gulp.task('livereload-reload', function (cb) {
  * Tasks
  ******************************************************************************/
 
-gulp.task('clean', function () {
-  return del([
-    'css',
-    'js',
-    'svg',
-    'demo'
-  ]);
+gulp.task('clean', function() {
+  return del(['css', 'js', 'svg', 'demo']);
 });
 
-gulp.task('build-css', function (cb) {
-  buildCss('src/css/**/*.scss', 'css/')
-    .on('end', cb);
+gulp.task('build-modernizr', function(cb) {
+  var filename = config.dist.vendor + 'modernizr/modernizr.js';
+  var dirname = path.dirname(filename);
+
+  fs
+    .mkdirpAsync(dirname)
+    .then(buildModernizr)
+    .then(function(data) {
+      return fs.writeFileAsync(filename, data, 'utf-8');
+    })
+    .then(function() {
+      gulp
+        .src(filename)
+        .pipe(uglify())
+        .pipe(
+          rename({
+            suffix: '.min'
+          })
+        )
+        .pipe(gulp.dest(dirname))
+        .on('end', cb);
+    });
 });
 
-gulp.task('build-img', function (cb) {
-  buildImg('src/img/**/*', 'img/')
-    .on('end', cb);
+gulp.task('build-css', function(cb) {
+  buildCss('src/css/**/*.scss', 'css/').on('end', cb);
 });
 
-gulp.task('build-js', function (cb) {
-  buildJs('src/js/**/*.js', 'js/')
-    .on('end', cb);
+gulp.task('build-img', function(cb) {
+  buildImg('src/img/**/*', 'img/').on('end', cb);
 });
 
-gulp.task('build-svg', function (cb) {
-  buildSvg('src/svg/**/*.svg', 'svg/')
-    .on('end', cb);
+gulp.task('build-js', function(cb) {
+  buildJs('src/js/**/*.js', 'js/').on('end', cb);
 });
 
-gulp.task('build-demo', function (cb) {
+gulp.task('build-svg', function(cb) {
+  buildSvg('src/svg/**/*.svg', 'svg/').on('end', cb);
+});
+
+gulp.task('build-demo', function(cb) {
   var context = {};
 
-  return fs.readFileAsync('src/index.njk', 'utf-8')
-    .then(function (data) {
+  return fs
+    .readFileAsync('src/index.njk', 'utf-8')
+    .then(function(data) {
       return nunjucks.renderString(data, context);
     })
-    .then(function (data) {
+    .then(function(data) {
       return fs.outputFileAsync('demo/index.html', data, 'utf-8');
     });
 });
 
-gulp.task('build', function (cb) {
+gulp.task('build', function(cb) {
   runSequence(
     'clean',
+    'build-modernizr',
     'build-css',
     'build-img',
     'build-js',
@@ -224,13 +280,8 @@ gulp.task('build', function (cb) {
   );
 });
 
-gulp.task('livereload', function () {
-  runSequence(
-    'build',
-    'webserver-init',
-    'livereload-init',
-    'watch:livereload'
-  );
+gulp.task('livereload', function() {
+  runSequence('build', 'webserver-init', 'livereload-init', 'watch:livereload');
 });
 
 /*******************************************************************************
@@ -238,10 +289,10 @@ gulp.task('livereload', function () {
  ******************************************************************************/
 
 // Watch with livereload that doesn't rebuild docs
-gulp.task('watch:livereload', function (cb) {
+gulp.task('watch:livereload', function(cb) {
   var livereloadTask = 'livereload-reload';
 
-  _.forEach(config.watchTasks, function (watchConfig) {
+  _.forEach(config.watchTasks, function(watchConfig) {
     var tasks = _.clone(watchConfig.tasks);
     tasks.push(livereloadTask);
     startWatch(watchConfig.files, tasks);
