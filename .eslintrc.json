@@ -8,24 +8,6 @@
     "mocha": true,
     "node": true
   },
-  "globals": {
-    "_": true,
-    "$": true,
-    "Confetti": true,
-    "jQuery": true,
-    "MathJax": true,
-    "Modernizr": true,
-    "moment": true,
-    "Promise": true,
-    "Queue": true,
-    "React": true,
-    "ReactDOM": true,
-    "ReactRedux": true,
-    "ReactThunk": true,
-    "Redux": true,
-    "SV": true,
-    "Velocity": true
-  },
   "plugins": [
     "dollar-sign",
     "jsdoc",
@@ -105,6 +87,7 @@
     }],
     "react/no-array-index-key": "error",
     "react/no-unused-prop-types": 0,
+    "react/prefer-stateless-function": 0,
     "vars-on-top": 0
   },
   "parser": "babel-eslint",
