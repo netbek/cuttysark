@@ -18,6 +18,9 @@
   "bugs": {
     "url": "https://github.com/netbek/cutty/issues"
   },
+  "resolutions": {
+    "eslint-scope": "3.7.1"
+  },
   "dependencies": {
     "asevented": "^0.4.5",
     "html5shiv": "^3.7.3",
@@ -28,11 +31,11 @@
     "respond.js": "^1.4.2"
   },
   "devDependencies": {
-    "babel-core": "^6.26.0",
-    "babel-eslint": "^8.2.2",
-    "babel-loader": "^7.1.2",
+    "babel-core": "^6.26.3",
+    "babel-eslint": "^8.2.6",
+    "babel-loader": "^7.1.5",
     "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-preset-airbnb": "^2.4.0",
+    "babel-preset-airbnb": "^2.5.1",
     "bluebird": "^3.4.7",
     "bourbon": "~4.2.6",
     "breakpoint-sass": "^2.7.0",
@@ -43,11 +46,11 @@
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-babel": "^4.1.2",
     "eslint-plugin-dollar-sign": "^1.0.1",
-    "eslint-plugin-import": "^2.9.0",
-    "eslint-plugin-jsdoc": "^3.5.0",
-    "eslint-plugin-jsx-a11y": "^6.0.3",
-    "eslint-plugin-prettier": "^2.6.0",
-    "eslint-plugin-react": "^7.7.0",
+    "eslint-plugin-import": "^2.13.0",
+    "eslint-plugin-jsdoc": "^3.7.1",
+    "eslint-plugin-jsx-a11y": "^6.1.1",
+    "eslint-plugin-prettier": "^2.6.2",
+    "eslint-plugin-react": "^7.10.0",
     "fs-extra": "^2.0.0",
     "gulp": "^3.9.1",
     "gulp-autoprefixer": "^3.1.1",
@@ -66,8 +69,8 @@
     "node-sass": "^4.5.3",
     "nunjucks": "^3.0.0",
     "open": "^0.0.5",
-    "penrose": "^0.1.8",
-    "prettier": "^1.10.2",
+    "penrose": "^0.1.16",
+    "prettier": "^1.13.7",
     "run-sequence": "^1.2.2",
     "singularitygs": "^1.7.0",
     "through2": "^2.0.3"
