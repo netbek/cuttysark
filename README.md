@@ -1,22 +1,20 @@
 # cutty
 
-## Install
+## Installation
 
-```
+```shell
 bower install cutty
 ```
 
-Also requires the following lodash methods:
+## Dependencies
 
-clone
-first
-forEach
-intersection
-isEqual
-last
-map
-sortBy
-trim
+* jQuery
+* lodash.intersection
+* lodash.isEqual
+* lodash.sortBy
+* lodash.throttle
+* Modernizr (svgclippaths)
+* Picturefill
 
 ## Credit
 
