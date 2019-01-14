@@ -13,7 +13,6 @@
       document.createElement('picture');
     </script>
     <script src="../demo/vendor/modernizr/modernizr.min.js"></script>
-    <script src="../node_modules/asevented/asevented.min.js"></script>
     <script src="../node_modules/lodash-3/lodash.min.js"></script>
     <script src="../node_modules/jquery/dist/jquery.min.js"></script>
     <script src="../node_modules/picturefill/dist/picturefill.min.js"></script>
@@ -70,7 +69,7 @@
             var url = $img.attr('xlink:href');
 
             cutty
-              .on('update', function(nextValues, oldValues) {
+              .on('update', function(nextValues) {
                 var nextURL = cutty.pickBestCandidate(candidates, nextValues).url;
                 if (nextURL !== url) {
                   url = nextURL;

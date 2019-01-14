@@ -8,10 +8,16 @@
     "mocha": true,
     "node": true
   },
+  "globals": {
+    "_": true,
+    "picturefill": true
+  },
   "plugins": [
     "dollar-sign",
+    "html",
     "jsdoc",
     "jsx-a11y",
+    "markdown",
     "prettier",
     "react"
   ],

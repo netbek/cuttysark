@@ -1,72 +1,61 @@
-var _ = require('lodash');
-var autoprefixer = require('gulp-autoprefixer');
-var cssmin = require('gulp-cssmin');
-var del = require('del');
-var fs = require('fs-extra');
-var gulp = require('gulp');
-var livereload = require('livereload');
-var modernizr = require('gulp-modernizr');
-var nunjucks = require('nunjucks');
-var open = require('open');
-var os = require('os');
-var path = require('path');
-var Promise = require('bluebird');
-var rename = require('gulp-rename');
-var runSequence = require('run-sequence');
-var sass = require('gulp-sass');
-var svgmin = require('gulp-svgmin');
-var through2 = require('through2');
-var uglify = require('gulp-uglify');
-var webserver = require('gulp-webserver');
+const _ = require('lodash');
+const autoprefixer = require('gulp-autoprefixer');
+const cssmin = require('gulp-cssmin');
+const fs = require('fs-extra');
+const gulp = require('gulp');
+const livereload = require('livereload');
+const log = require('fancy-log');
+const modernizr = require('gulp-modernizr');
+const nunjucks = require('nunjucks');
+const open = require('open');
+const os = require('os');
+const path = require('path');
+const Promise = require('bluebird');
+const rename = require('gulp-rename');
+const sass = require('gulp-sass');
+const svgmin = require('gulp-svgmin');
+const through2 = require('through2');
+const uglify = require('gulp-uglify');
+const webpack = require('webpack');
+const webserver = require('gulp-webserver');
 
 Promise.promisifyAll(fs);
 
-/*******************************************************************************
- * Config
- ******************************************************************************/
+const gulpConfig = require('./gulp.config');
+const webpackConfig = require('./webpack.config');
 
-var config = require('./gulp-config.js');
-
-var livereloadOpen =
-  (config.webserver.https ? 'https' : 'http') +
+const livereloadOpen =
+  (gulpConfig.webserver.https ? 'https' : 'http') +
   '://' +
-  config.webserver.host +
+  gulpConfig.webserver.host +
   ':' +
-  config.webserver.port +
-  (config.webserver.open ? config.webserver.open : '/');
+  gulpConfig.webserver.port +
+  (gulpConfig.webserver.open ? gulpConfig.webserver.open : '/');
 
-/*******************************************************************************
- * Misc
- ******************************************************************************/
-
-var flags = {
+const flags = {
   livereloadInit: false // Whether `livereload-init` task has been run
 };
-var server;
+let server;
 
-// Choose browser for node-open.
-var browser = config.webserver.browsers.default;
-var platform = os.platform();
-if (_.has(config.webserver.browsers, platform)) {
-  browser = config.webserver.browsers[platform];
+// Choose browser for node-open
+let browser = gulpConfig.webserver.browsers.default;
+const platform = os.platform();
+if (_.has(gulpConfig.webserver.browsers, platform)) {
+  browser = gulpConfig.webserver.browsers[platform];
 }
-
-/*******************************************************************************
- * Functions
- ******************************************************************************/
 
 /**
  * Returns custom Modernizr build.
  *
- * @return {Promise}
+ * @returns {Promise}
  */
 function buildModernizr() {
   var data;
 
   return new Promise(function(resolve, reject) {
     gulp
-      .src([config.src.vendor + 'modernizr/modernizr.css'])
-      .pipe(modernizr(config.modernizr))
+      .src([gulpConfig.src.vendor + 'modernizr/modernizr.css'])
+      .pipe(modernizr(gulpConfig.modernizr))
       .pipe(
         through2.obj(function(chunk, enc, callback) {
           data = chunk.contents.toString(enc);
@@ -81,15 +70,15 @@ function buildModernizr() {
 
 /**
  *
- * @param  {String} src
- * @param  {String} dist
- * @return {Stream}
+ * @param   {string} src
+ * @param   {string} dist
+ * @returns {Stream}
  */
 function buildCss(src, dist) {
   return gulp
     .src(src)
-    .pipe(sass(config.css.params).on('error', sass.logError))
-    .pipe(autoprefixer(config.autoprefixer))
+    .pipe(sass(gulpConfig.css.params).on('error', sass.logError))
+    .pipe(autoprefixer(gulpConfig.autoprefixer))
     .pipe(gulp.dest(dist))
     .pipe(
       cssmin({
@@ -106,38 +95,54 @@ function buildCss(src, dist) {
 
 /**
  *
- * @param  {String} src
- * @param  {String} dist
- * @return {Stream}
+ * @param   {string} src
+ * @param   {string} dist
+ * @returns {Stream}
  */
 function buildImg(src, dist) {
   return gulp.src(src).pipe(gulp.dest(dist));
 }
 
-/**
- *
- * @param  {String} src
- * @param  {String} dist
- * @return {Stream}
- */
-function buildJs(src, dist) {
-  return gulp
-    .src(src)
-    .pipe(gulp.dest(dist))
-    .pipe(
-      rename({
-        suffix: '.min'
-      })
-    )
-    .pipe(uglify())
-    .pipe(gulp.dest(dist));
+function buildJs(config) {
+  return new Promise((resolve, reject) => {
+    webpack(config, function(err, stats) {
+      if (err) {
+        log('[webpack]', err);
+        reject();
+      } else {
+        log(
+          '[webpack]',
+          stats.toString({
+            cached: false,
+            cachedAssets: false,
+            children: true,
+            chunks: false,
+            chunkModules: false,
+            chunkOrigins: true,
+            colors: true,
+            entrypoints: false,
+            errorDetails: false,
+            hash: false,
+            modules: false,
+            performance: true,
+            reasons: true,
+            source: false,
+            timings: true,
+            version: true,
+            warnings: true
+          })
+        );
+        resolve();
+      }
+    });
+  });
 }
 
 /**
  *
- * @param  {String} src
- * @param  {String} dist
- * @return {Stream}
+ * @param   {string} src
+ * @param   {string} dist
+ * @returns {Stream}
  */
 function buildSvg(src, dist) {
   return gulp
@@ -160,71 +165,53 @@ function buildSvg(src, dist) {
 /**
  * Start a watcher.
  *
- * @param {Array} files
- * @param {Array} tasks
- * @param {Boolean} livereload Set to TRUE to force livereload to refresh the page.
+ * @param {Array}   files
+ * @param {Array}   tasks
+ * @param {boolean} live - Set to TRUE to force livereload to refresh the page.
  */
-function startWatch(files, tasks, livereload) {
-  if (livereload) {
+function startWatch(files, tasks, live = false) {
+  if (live) {
     tasks.push('livereload-reload');
   }
-
-  gulp.watch(files, function() {
-    runSequence.apply(null, tasks);
-  });
+  gulp.watch(files, gulp.series(...tasks));
 }
 
-/*******************************************************************************
- * Livereload tasks
- ******************************************************************************/
-
-// Start webserver.
-gulp.task('webserver-init', function(cb) {
-  var conf = _.clone(config.webserver);
-  conf.open = false;
-
+// Start webserver
+gulp.task('webserver-init', cb => {
   gulp
     .src('./')
-    .pipe(webserver(conf))
+    .pipe(webserver({...gulpConfig.webserver, open: false}))
     .on('end', cb);
 });
 
 // Start livereload server
-gulp.task('livereload-init', function(cb) {
+gulp.task('livereload-init', cb => {
   if (!flags.livereloadInit) {
     flags.livereloadInit = true;
     server = livereload.createServer();
     open(livereloadOpen, browser);
   }
-
   cb();
 });
 
 // Refresh page
-gulp.task('livereload-reload', function(cb) {
+gulp.task('livereload-reload', cb => {
   server.refresh(livereloadOpen);
   cb();
 });
 
-/*******************************************************************************
- * Tasks
- ******************************************************************************/
+gulp.task('clean', () =>
+  Promise.mapSeries(['css', 'js', 'svg', 'demo'], dir => fs.removeAsync(dir))
+);
 
-gulp.task('clean', function() {
-  return del(['css', 'js', 'svg', 'demo']);
-});
+gulp.task('build-modernizr', cb => {
+  const filename = gulpConfig.dist.vendor + 'modernizr/modernizr.js';
+  const dirname = path.dirname(filename);
 
-gulp.task('build-modernizr', function(cb) {
-  var filename = config.dist.vendor + 'modernizr/modernizr.js';
-  var dirname = path.dirname(filename);
-
-  fs
-    .mkdirpAsync(dirname)
+  fs.mkdirpAsync(dirname)
     .then(buildModernizr)
-    .then(function(data) {
-      return fs.writeFileAsync(filename, data, 'utf-8');
-    })
-    .then(function() {
+    .then(data => fs.writeFileAsync(filename, data, 'utf-8'))
+    .then(() =>
       gulp
         .src(filename)
         .pipe(uglify())
@@ -234,73 +221,66 @@ gulp.task('build-modernizr', function(cb) {
           })
         )
         .pipe(gulp.dest(dirname))
-        .on('end', cb);
-    });
+        .on('end', cb)
+    );
 });
 
-gulp.task('build-css', function(cb) {
+gulp.task('build-css', cb => {
   buildCss('src/css/**/*.scss', 'css/').on('end', cb);
 });
 
-gulp.task('build-img', function(cb) {
+gulp.task('build-img', cb => {
   buildImg('src/img/**/*', 'img/').on('end', cb);
 });
 
-gulp.task('build-js', function(cb) {
-  buildJs('src/js/**/*.js', 'js/').on('end', cb);
-});
+gulp.task('build-js', () =>
+  buildJs({
+    ...webpackConfig,
+    entry: {
+      cutty: path.resolve('src/js/cutty.js'),
+      'cutty.min': path.resolve('src/js/cutty.js')
+    },
+    output: {
+      filename: '[name].js',
+      path: path.resolve('js')
+    }
+  })
+);
 
-gulp.task('build-svg', function(cb) {
+gulp.task('build-svg', cb => {
   buildSvg('src/svg/**/*.svg', 'svg/').on('end', cb);
 });
 
-gulp.task('build-demo', function(cb) {
-  var context = {};
-
-  return fs
+gulp.task('build-demo', () =>
+  fs
     .readFileAsync('src/index.njk', 'utf-8')
-    .then(function(data) {
-      return nunjucks.renderString(data, context);
-    })
-    .then(function(data) {
-      return fs.outputFileAsync('demo/index.html', data, 'utf-8');
-    });
-});
+    .then(data => nunjucks.renderString(data, {}))
+    .then(data => fs.outputFileAsync('demo/index.html', data, 'utf-8'))
+);
 
-gulp.task('build', function(cb) {
-  runSequence(
+gulp.task(
+  'build',
+  gulp.series(
     'clean',
     'build-modernizr',
     'build-css',
     'build-img',
     'build-js',
     'build-svg',
-    'build-demo',
-    cb
+    'build-demo'
+  )
+);
+
+// Watch with livereload that doesn't rebuild docs
+gulp.task('watch:livereload', () => {
+  gulpConfig.watchTasks.forEach(config =>
+    startWatch(config.files, [].concat(config.tasks, ['livereload-reload']))
   );
 });
 
-gulp.task('livereload', function() {
-  runSequence('build', 'webserver-init', 'livereload-init', 'watch:livereload');
-});
+gulp.task(
+  'livereload',
+  gulp.series('build', 'webserver-init', 'livereload-init', 'watch:livereload')
+);
 
-/*******************************************************************************
- * Watch tasks
- ******************************************************************************/
-
-// Watch with livereload that doesn't rebuild docs
-gulp.task('watch:livereload', function(cb) {
-  var livereloadTask = 'livereload-reload';
-
-  _.forEach(config.watchTasks, function(watchConfig) {
-    var tasks = _.clone(watchConfig.tasks);
-    tasks.push(livereloadTask);
-    startWatch(watchConfig.files, tasks);
-  });
-});
-
-/*******************************************************************************
- * Default task
- ******************************************************************************/
-
-gulp.task('default', ['build']);
+exports.default = gulp.series('build');

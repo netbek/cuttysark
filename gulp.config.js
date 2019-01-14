@@ -1,25 +1,12 @@
+const {browserslist} = require('./package.json');
+
 module.exports = {
   autoprefixer: {
-    browsers: [
-      'last 2 versions',
-      'ie >= 8',
-      'ff >= 5',
-      'chrome >= 20',
-      'opera >= 12',
-      'safari >= 4',
-      'ios >= 6',
-      'android >= 2',
-      'bb >= 6'
-    ]
+    browsers: browserslist
   },
   css: {
     params: {
-      includePaths: [
-        'node_modules/bourbon/app/assets/stylesheets/',
-        'node_modules/breakpoint-sass/stylesheets/',
-        'node_modules/mathsass/dist/',
-        'node_modules/singularitygs/stylesheets/'
-      ],
+      includePaths: [],
       errLogToConsole: true
     }
   },
