@@ -9,7 +9,6 @@
     "test"
   ],
   "dependencies": {
-    "asEvented": "git://github.com/mkuklis/asEvented.git#^0.4.5",
     "picturefill": "^3.0.2"
   }
 }
