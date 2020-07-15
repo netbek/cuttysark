@@ -86,7 +86,7 @@
     "node-sass": "4.14.1",
     "nunjucks": "3.2.1",
     "open": "0.0.5",
-    "penrose": "0.2.13",
+    "penrose": "0.2.14",
     "prettier": "1.19.1",
     "through2": "3.0.2",
     "uglifyjs-webpack-plugin": "1",
