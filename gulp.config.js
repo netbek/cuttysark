@@ -2,7 +2,7 @@ const {browserslist} = require('./package.json');
 
 module.exports = {
   autoprefixer: {
-    browsers: browserslist
+    overrideBrowserslist: browserslist
   },
   css: {
     params: {
