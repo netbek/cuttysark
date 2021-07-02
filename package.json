@@ -85,7 +85,7 @@
     "lodash": "4.17.21",
     "node-sass": "4.14.1",
     "nunjucks": "3.2.3",
-    "open": "0.0.5",
+    "open": "6.0.0",
     "penrose": "0.2.20",
     "prettier": "1.19.1",
     "through2": "3.0.2",
